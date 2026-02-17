@@ -1,0 +1,44 @@
+var tsExKey = "333"; // Your Triggered Send External Key
+
+        var mobileNumber = countryCode + "-" + mobile;
+
+        var tsDef = {
+
+          TriggeredSendDefinition: { CustomerKey: tsExKey },
+
+          Subscribers: [{
+
+            EmailAddress: triggersendemail,
+
+            SubscriberKey: triggersendemail,
+
+            Attributes: [
+
+              { Name: "firstName", Value: firstName },
+
+              { Name: "lastName", Value: lastName },
+
+              { Name: "countryCode", Value: countryCode },
+
+              { Name: "mobile", Value: mobileNumber },
+
+              { Name: "email", Value: email },
+
+              { Name: "company", Value: company },
+
+              { Name: "description", Value: description },
+
+              { Name: "Country", Value: Country },
+
+              { Name: "State", Value: State }
+
+            ]
+
+          }]
+
+        };
+ 
+        var prox = new Script.Util.WSProxy();
+
+        var tsRes = prox.createItem("TriggeredSend", tsDef);
+ 
