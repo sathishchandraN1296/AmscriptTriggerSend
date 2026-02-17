@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Data Extension Field Matcher</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f4f6f9;
+}
+
+.card{
+border-radius:12px;
+box-shadow:0 4px 20px rgba(0,0,0,.08);
+}
+
+.table thead{
+background:#0d6efd;
+color:#fff;
+}
+
+.match-row{
+background:#e7f1ff;
+}
+
+.no-match{
+color:#dc3545;
+font-weight:500;
+}
+
+</style>
+
+</head>
+
+<body class="container py-5">
+
+<div class="card p-4">
+
+<h3 class="mb-4 text-primary">Data Extension Field Matcher</h3>
+
+
+<form method="post">
+
+<div class="row">
+
+<!-- DE1 -->
+<div class="col-md-3">
+<label>Select Data Extension 1</label>
+<select name="de1" class="form-select">
+
+<option value="">--Select--</option>
+
+<script runat="server">
+
+Platform.Load("core","1");
+
+var filter = {
+Property:"IsPlatformObject",
+SimpleOperator:"equals",
+Value:"false"
+};
+
+var deList = DataExtension.Retrieve(filter);
+
+var selected1 = Request.GetFormField("de1");
+
+for(var i=0;i<deList.length;i++){
+
+var sel="";
+
+if(selected1==deList[i].CustomerKey) sel="selected";
+
+Write('<option value="'+deList[i].CustomerKey+'" '+sel+'>'+deList[i].Name+'</option>');
+
+}
+
+</script>
+
+</select>
+</div>
+
+
+<!-- DE2 -->
+<div class="col-md-3">
+<label>Select Data Extension 2</label>
+<select name="de2" class="form-select">
+
+<option value="">--Select--</option>
+
+<script runat="server">
+
+var selected2=Request.GetFormField("de2");
+
+for(var i=0;i<deList.length;i++){
+
+var sel="";
+
+if(selected2==deList[i].CustomerKey) sel="selected";
+
+Write('<option value="'+deList[i].CustomerKey+'" '+sel+'>'+deList[i].Name+'</option>');
+
+}
+
+</script>
+
+</select>
+</div>
+
+
+<!-- DE3 -->
+<div class="col-md-3">
+<label>Select Data Extension 3</label>
+<select name="de3" class="form-select">
+
+<option value="">--Select--</option>
+
+<script runat="server">
+
+var selected3=Request.GetFormField("de3");
+
+for(var i=0;i<deList.length;i++){
+
+var sel="";
+
+if(selected3==deList[i].CustomerKey) sel="selected";
+
+Write('<option value="'+deList[i].CustomerKey+'" '+sel+'>'+deList[i].Name+'</option>');
+
+}
+
+</script>
+
+</select>
+</div>
+
+
+<!-- JOIN TYPE -->
+<div class="col-md-3">
+<label>Select Join Type</label>
+
+<select name="jointype" class="form-select">
+
+<option value="">--Select Join--</option>
+<option value="INNER JOIN">INNER JOIN</option>
+<option value="LEFT JOIN">LEFT JOIN</option>
+<option value="RIGHT JOIN">RIGHT JOIN</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="mt-4 text-center">
+
+<button class="btn btn-primary">Compare & Generate SQL</button>
+
+</div>
+
+</form>
+
+
+<hr>
+
+
+<script runat="server">
+
+Platform.Load("core","1");
+
+var de1=Request.GetFormField("de1");
+var de2=Request.GetFormField("de2");
+var de3=Request.GetFormField("de3");
+
+var joinType=Request.GetFormField("jointype");
+
+
+/* GET FIELDS */
+
+function getFields(deKey){
+
+var arr=[];
+
+if(!deKey) return arr;
+
+try{
+
+var fields=DataExtension.Init(deKey).Fields.Retrieve();
+
+for(var i=0;i<fields.length;i++){
+
+arr.push(fields[i].Name);
+
+}
+
+}catch(e){
+
+Write("<div class='alert alert-danger'>"+String(e)+"</div>");
+
+}
+
+return arr;
+
+}
+
+
+var f1=getFields(de1);
+var f2=getFields(de2);
+var f3=getFields(de3);
+
+
+/* FIELD COMPARISON TABLE */
+
+if(f1.length>0 || f2.length>0 || f3.length>0){
+
+var allFields={};
+
+function addFields(list,source){
+
+for(var i=0;i<list.length;i++){
+
+var name=list[i];
+
+var key=name.toLowerCase();
+
+if(!allFields[key]){
+
+allFields[key]={
+
+name:name,
+de1:false,
+de2:false,
+de3:false
+
+};
+
+}
+
+allFields[key][source]=true;
+
+}
+
+}
+
+
+addFields(f1,"de1");
+addFields(f2,"de2");
+addFields(f3,"de3");
+
+
+Write('<h5>Field Comparison Result</h5>');
+
+Write('<table class="table table-bordered">');
+
+Write('<thead><tr>');
+
+if(de1) Write('<th>DE1</th>');
+if(de2) Write('<th>DE2</th>');
+if(de3) Write('<th>DE3</th>');
+
+Write('<th>Status</th>');
+
+Write('</tr></thead><tbody>');
+
+
+for(var key in allFields){
+
+var row=allFields[key];
+
+var count=0;
+
+if(row.de1) count++;
+if(row.de2) count++;
+if(row.de3) count++;
+
+var text="No Match";
+var cls="";
+
+if(count>=2){
+
+text="Match";
+cls="match-row";
+
+}
+
+Write('<tr class="'+cls+'">');
+
+if(de1) Write('<td>'+(row.de1?row.name:"")+'</td>');
+if(de2) Write('<td>'+(row.de2?row.name:"")+'</td>');
+if(de3) Write('<td>'+(row.de3?row.name:"")+'</td>');
+
+Write('<td>'+text+'</td>');
+
+Write('</tr>');
+
+}
+
+Write('</tbody></table>');
+
+
+/* SQL GENERATOR */
+
+if(joinType){
+
+var joinField="";
+
+for(var key in allFields){
+
+var row=allFields[key];
+
+var count=0;
+
+if(row.de1) count++;
+if(row.de2) count++;
+if(row.de3) count++;
+
+if(count>=2){
+
+joinField=row.name;
+
+break;
+
+}
+
+}
+
+
+if(joinField){
+
+var selectArr=[];
+
+for(var i=0;i<f1.length;i++)
+selectArr.push("a."+f1[i]+" AS DE1_"+f1[i]);
+
+for(var i=0;i<f2.length;i++)
+selectArr.push("b."+f2[i]+" AS DE2_"+f2[i]);
+
+for(var i=0;i<f3.length;i++)
+selectArr.push("c."+f3[i]+" AS DE3_"+f3[i]);
+
+
+var sql="SELECT \n"+selectArr.join(",\n")+"\nFROM "+de1+" a\n";
+
+if(de2)
+sql+=joinType+" "+de2+" b ON a."+joinField+"=b."+joinField+"\n";
+
+if(de3)
+sql+=joinType+" "+de3+" c ON a."+joinField+"=c."+joinField+"\n";
+
+
+Write('<hr>');
+Write('<h5 class="text-success">'+joinType+' Query</h5>');
+Write('<pre>'+sql+'</pre>');
+
+}else{
+
+Write('<div class="alert alert-warning">No matching fields found for join</div>');
+
+}
+
+}
+
+}
+
+</script>
+
+
+</div>
+
+</body>
+
+</html>
