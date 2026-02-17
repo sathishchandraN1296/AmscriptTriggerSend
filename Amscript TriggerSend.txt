@@ -1,0 +1,134 @@
+%%[
+/* Triggered Send Setup */
+SET @ts = CreateObject("TriggeredSend")
+SET @tsDef = CreateObject("TriggeredSendDefinition")
+ 
+/* Map mall to triggered send external key */
+SET @mallname = RequestParameter("mallname")
+ 
+IF @mallname == "yasmall" THEN
+  SET @ts_extkey = "154297"
+ELSEIF @mallname == "wtcmall" THEN
+  SET @ts_extkey = "154442"
+ELSEIF @mallname == "aljimimall" THEN
+  SET @ts_extkey = "154443"
+ELSEIF @mallname == "alhamramall" THEN
+  SET @ts_extkey = "154444"
+ENDIF
+ 
+/* Form parameters */
+SET @ts_email = RequestParameter("email")
+SET @ts_subkey = IIF(EMPTY(@ts_email), "test@example.com", @ts_email)
+SET @firstName = RequestParameter("firstName")
+SET @lastName = RequestParameter("lastName")
+SET @mobile = RequestParameter("mobile")
+SET @nationality = RequestParameter("nationality")
+SET @dob = RequestParameter("dob")
+SET @residenceCountry = RequestParameter("residencecountry")
+SET @storeNameOne = RequestParameter("storenameone")
+SET @receiptAmountOne = RequestParameter("receiptamountone")
+SET @storeNameTwo = RequestParameter("storenametwo")
+SET @receiptAmountTwo = RequestParameter("receiptamounttwo")
+SET @hearAbout = RequestParameter("hearabout")
+SET @acceptTC = IIF(RequestParameter("tnc") == "true" OR RequestParameter("tnc") == "on", "true", "false")
+SET @subscribeOffers = IIF(RequestParameter("offersconsent") == "true" OR RequestParameter("offersconsent") == "on", "true", "false")
+SET @language = AttributeValue("language")
+ 
+/* Format DOB */
+IF NOT EMPTY(@dob) THEN
+  SET @formattedDOB = CONCAT(SUBSTRING(@dob,7,4), "-", SUBSTRING(@dob,4,2), "-", SUBSTRING(@dob,1,2))
+ELSE
+  SET @formattedDOB = ""
+ENDIF
+ 
+/* Triggered Send Definition */
+SetObjectProperty(@tsDef, "CustomerKey", @ts_extkey)
+SetObjectProperty(@ts, "TriggeredSendDefinition", @tsDef)
+ 
+/* Create Subscriber object */
+SET @ts_sub = CreateObject("Subscriber")
+SetObjectProperty(@ts_sub, "EmailAddress", @ts_email)
+SetObjectProperty(@ts_sub, "SubscriberKey", @ts_subkey)
+ 
+/* Add attributes properly */
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "firstName")
+SetObjectProperty(@attr, "Value", @firstName)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "lastName")
+SetObjectProperty(@attr, "Value", @lastName)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "mobile")
+SetObjectProperty(@attr, "Value", @mobile)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "nationality")
+SetObjectProperty(@attr, "Value", @nationality)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "dob")
+SetObjectProperty(@attr, "Value", @formattedDOB)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "residenceCountry")
+SetObjectProperty(@attr, "Value", @residenceCountry)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "storeNameOne")
+SetObjectProperty(@attr, "Value", @storeNameOne)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "receiptAmountOne")
+SetObjectProperty(@attr, "Value", @receiptAmountOne)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "storeNameTwo")
+SetObjectProperty(@attr, "Value", @storeNameTwo)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "receiptAmountTwo")
+SetObjectProperty(@attr, "Value", @receiptAmountTwo)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "hearAbout")
+SetObjectProperty(@attr, "Value", @hearAbout)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "acceptTC")
+SetObjectProperty(@attr, "Value", @acceptTC)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "subscribeOffers")
+SetObjectProperty(@attr, "Value", @subscribeOffers)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+SET @attr = CreateObject("Attribute")
+SetObjectProperty(@attr, "Name", "language")
+SetObjectProperty(@attr, "Value", @language)
+AddObjectArrayItem(@ts_sub, "Attributes", @attr)
+ 
+/* Add subscriber to triggered send */
+AddObjectArrayItem(@ts, "Subscribers", @ts_sub)
+ 
+/* Send the triggered email */
+SET @ts_statusCode = InvokeCreate(@ts, @ts_statusMsg, @errorCode)
+ 
+IF @ts_statusCode != "OK" THEN
+  RaiseError(@ts_statusMsg, 0, @ts_statusCode, @errorCode)
+ENDIF
+]%%
